@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from fastapi_cache.decorator import cache
+from fastapi_cache import FastAPICache
+
 from core.db import get_session
 from core.auth import is_admin
 from crud import crud_category
@@ -13,9 +16,11 @@ router = APIRouter()
 async def create_category(category_data: CategoryCreate,
                            session: AsyncSession = Depends(get_session)):
     new_category = await crud_category.create_category(category_data=category_data, session=session)
+    await FastAPICache.clear("get_all_category")
     return new_category
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=list[CategoryPublic])
+@cache(expire=300, namespace="get_all_category")
 async def get_all_category(session:AsyncSession = Depends(get_session)):
     all_category = await crud_category.get_all_category(session=session)
     return all_category

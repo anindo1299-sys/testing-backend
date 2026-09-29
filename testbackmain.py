@@ -4,9 +4,33 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from api import user, product, category, review
+from contextlib import asynccontextmanager
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+import redis.asyncio as redis
 
-app = FastAPI()
+from api import user, product, category, review
+from core.config import get_settings
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis_client = redis.Redis(
+        host="localhost",
+        port=6379,
+        db=0
+    )
+    FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+    yield
+    await redis_client.close()
+
+
+
+app = FastAPI(
+    title="FastAPI E-Com",
+    version="1.0",
+    lifespan=lifespan
+)
 
 
 app.add_middleware(
