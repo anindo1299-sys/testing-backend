@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ani2and2is5
+      MYSQL_DATABASE: BackendTestProject
+    ports:
+      - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      
+  web:
+    build:
+      context: .
+      dockerfile: dockerfile.prod
+    command: uvicorn testbackmain:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:ani2and2is5@db:3306/BackendTestProject
+      DATABASE_SYNC_URL: mysql+pymysql://root:ani2and2is5@db:3306/BackendTestProject
+      SECRET_KEY: "kC5HjLveT9ntqSwzevYdjWOcmoYzAhyWbhhUdgUhhUI"
+      ALGORITHM: "HS256"
+      REDIS_HOST: redis-queue
+      CELERY_BROKER_URL: "redis://redis-queue:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis-queue:6379/1"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+    restart: unless-stopped
+      
+  redis:
+    image: redis:7-alpine
+    container_name: redis-queue
+    restart: always
+    ports:
+      - '6379:6379'
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  worker:
+    build:
+      context: .
+      dockerfile: dockerfile.prod
+    command: celery -A worker.celery_app worker -I tasks --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:ani2and2is5@db:3306/BackendTestProject
+      DATABASE_SYNC_URL: mysql+pymysql://root:ani2and2is5@db:3306/BackendTestProject
+      SECRET_KEY: "kC5HjLveT9ntqSwzevYdjWOcmoYzAhyWbhhUdgUhhUI"
+      ALGORITHM: "HS256"
+      REDIS_HOST: redis-queue
+      CELERY_BROKER_URL: "redis://redis-queue:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis-queue:6379/1"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+  migrate:
+    build:
+      context: .
+      dockerfile: dockerfile.prod
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:ani2and2is5@db:3306/BackendTestProject
+      DATABASE_SYNC_URL: mysql+pymysql://root:ani2and2is5@db:3306/BackendTestProject
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: "no"
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
+    driver: bridge

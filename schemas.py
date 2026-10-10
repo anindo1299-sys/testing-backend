@@ -53,3 +53,16 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+
+class OrderCreate(SQLModel):
+    customer_name: str
+    item: str
+
+class OrderResponse(BaseModel):
+    id: int
+    customer_name: str
+    item: str
+    status: str
+
+class config:
+    orm_mode: True

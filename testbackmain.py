@@ -9,7 +9,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 import redis.asyncio as redis
 
-from api import user, product, category, review
+from api import user, product, category, review, basic_background, background_status
 from core.config import get_settings
 
 
@@ -59,6 +59,8 @@ app.include_router(user.router, prefix="/api/v1/user", tags=["User"])
 app.include_router(category.router, prefix="/api/v1/category", tags=["Category"])
 app.include_router(product.router, prefix="/api/v1/product", tags=["Product"])
 app.include_router(review.router, prefix="/api/v1/review", tags=["Reviews"])
+app.include_router(basic_background.router, prefix="/api/v1/Background", tags=["Background Task"])
+app.include_router(background_status.router, prefix="/api/v1/order_status", tags=["Order status"])
 
 if __name__ == "__main__":
     uvicorn.run("testbackmain:app", host="127.0.0.1", reload=True, port=8000)

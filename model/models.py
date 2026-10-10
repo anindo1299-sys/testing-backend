@@ -33,3 +33,8 @@ class Review(SQLModel, table=True):
     product_id: int = Field(foreign_key="product.id")
     product: Product = Relationship(back_populates="review")
 
+class Order(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    customer_name: str
+    item: str
+    status: str = Field(default="Order is Placed")
