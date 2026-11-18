@@ -21,7 +21,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: dockerfile.prod
+      dockerfile: Dockerfile
     command: uvicorn testbackmain:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - '8000:8000'
@@ -62,7 +62,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: dockerfile.prod
+      dockerfile: Dockerfile
     command: celery -A worker.celery_app worker -I tasks --loglevel=info
     volumes:
       - .:/app
@@ -85,7 +85,7 @@ services:
   migrate:
     build:
       context: .
-      dockerfile: dockerfile.prod
+      dockerfile: Dockerfile
     command: alembic upgrade head
     environment:
       DATABASE_URL: mysql+aiomysql://root:ani2and2is5@db:3306/BackendTestProject
