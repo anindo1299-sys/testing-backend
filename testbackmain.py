@@ -16,7 +16,7 @@ from core.config import get_settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_client = redis.Redis(
-        host="localhost",
+        host="redis-queue",
         port=6379,
         db=0
     )
