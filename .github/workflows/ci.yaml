@@ -10,7 +10,7 @@ jobs:
         runs-on: self-hosted
 
         env:
-          IMAGE_NAME: anindo1299/fastapi-ecom-backend
+          IMAGE_NAME: anindochakroborty/fastapi-ecom-backend
           STACK_NAME: mystack
 
         steps:
